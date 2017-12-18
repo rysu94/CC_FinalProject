@@ -306,6 +306,24 @@ function CheckPlayAgain()
 
           gameNoise.setVolume(0.5);
 
+          /*
+          if(particles.length > 0)
+          {
+            for(var ipart = particles.length; ipart >= 0; ipart--)
+           {
+            particles[ipart].splice(ipart,1);
+            }  
+          }
+
+          if(bullets.length > 0)
+          {
+            for(var iBull = bullets.length; iBull >=0; iBull--)
+            {
+              bullets[iBull].splice(iBull,1);
+            }
+          }
+          */
+          
           for(var iball = ballX.length; iball >= 0; iball--)
           {
             ballX.splice(iball,1);
@@ -475,6 +493,8 @@ function Ball(x,y)
   
   this.size = 15;
 
+  this.timer = 0;
+
   this.reset = function()
   {
       this.x = 320;
@@ -486,12 +506,13 @@ function Ball(x,y)
       this.speed = 1;
       this.controller = 0;
       this.counter = 0;
-  
+      this.timer = 0;
       this.size = 15;
   }
   
   this.draw = function()
   {
+    this.timer++;
     this.counter++;
     this.x += this.xVel * this.speed;
     this.y += this.yVel * this.speed;
@@ -509,7 +530,7 @@ function Ball(x,y)
     if(this.x < 38)
     {
       //Create Particles
-      particles[particles.length] = new HitParticles(this.x, this.y, this.size, 5, 2, false);
+      particles[particles.length] = new HitParticles(this.x, this.y, this.size, 5, 2, false, false);
       
       //Reset the ball
       this.x = 320;
@@ -524,7 +545,7 @@ function Ball(x,y)
     if(this.x > 602)
     {
       //Create Particles
-      particles[particles.length] = new HitParticles(this.x, this.y, this.size, 5, 1, false);
+      particles[particles.length] = new HitParticles(this.x, this.y, this.size, 5, 1, false, false);
       
       //Reset the ball
       this.x = 320;
@@ -644,7 +665,7 @@ function Paddle(x, y, playerNum)
 }
 
 //Class responsible for generating particle systems
-function HitParticles(x,y, size, numParticles, controller, init)
+function HitParticles(x,y, size, numParticles, controller, init, flip)
 {
   //particle index
   this.init = init;
@@ -669,6 +690,8 @@ function HitParticles(x,y, size, numParticles, controller, init)
   this.partVelY = [];
   
   this.counter = 0;
+
+  this.reverse = flip;
   
   this.Initialize = function()
   {
@@ -680,11 +703,20 @@ function HitParticles(x,y, size, numParticles, controller, init)
       if(this.controller === 1)
       {
         this.partVelX[i] = -random(1, 2);
+        if(flip)
+        {
+          this.partVelX[i] = random(1, 2);
+        }
+
       }
       //P2, Left
       if(this.controller === 2)
       {
         this.partVelX[i] = random(1, 2); 
+        if(flip)
+        {
+          this.partVelX[i] = -random(1, 2); 
+        }
       }      
       this.partVelY[i] = -random(0.1, 0.5);
     }
@@ -703,7 +735,23 @@ function HitParticles(x,y, size, numParticles, controller, init)
           fill(255,0,0); 
           for(var part1 = 0; part1 < this.partX.length; part1++)
           {
-            if(this.partY[part1] < 442 && this.partX[part1] > 38)
+            if(!this.flip && this.partY[part1] < 442 && this.partX[part1] > 38)
+            {
+              ellipse(this.partX[part1], this.partY[part1], this.size, this.size);
+              this.partX[part1] += this.partVelX[part1];
+              this.partY[part1] += this.partVelY[part1];
+              this.partVelY[part1]+= 0.005;
+            
+              if(this.counter == 5)
+              {     
+                ballX[ballX.length] = this.partX[part1];
+                ballY[ballY.length] = this.partY[part1];
+                ballColor[ballColor.length] = 1;  
+                ballSize[ballSize.length] = this.size;
+              }
+              
+            }
+            if(this.flip && this.partY[part1] < 442 && this.partX[part1] < 602)
             {
               ellipse(this.partX[part1], this.partY[part1], this.size, this.size);
               this.partX[part1] += this.partVelX[part1];
@@ -720,7 +768,6 @@ function HitParticles(x,y, size, numParticles, controller, init)
               
             }
             
-            
           }
        }
     
@@ -730,7 +777,7 @@ function HitParticles(x,y, size, numParticles, controller, init)
           fill(0,0,255); 
           for(var part2 = 0; part2 < this.partX.length; part2++)
           {
-            if(this.partY[part2] < 442 && this.partX[part2] < 602)
+            if(!this.flip && this.partY[part2] < 442 && this.partX[part2] < 602)
             {
               ellipse(this.partX[part2], this.partY[part2], this.size, this.size);
               this.partX[part2] += this.partVelX[part2];
@@ -746,6 +793,22 @@ function HitParticles(x,y, size, numParticles, controller, init)
               }
       
             }
+            if(this.flip && this.partY[part2] < 442 && this.partX[part2] > 38)
+            {
+              ellipse(this.partX[part2], this.partY[part2], this.size, this.size);
+              this.partX[part2] += this.partVelX[part2];
+              this.partY[part2] += this.partVelY[part2];
+              this.partVelY[part2]+= 0.005;
+            
+              if(this.counter == 5)
+              {
+                ballX[ballX.length] = this.partX[part2];
+                ballY[ballY.length] = this.partY[part2];
+                ballColor[ballColor.length] = 2;  
+                ballSize[ballSize.length] = this.size;  
+              }
+      
+            }            
 
           }
       }
@@ -800,20 +863,34 @@ function Bullet(x, y, controller, index)
     }
 
     //Ball collision
-    if(this.x > theBall.x - theBall.size/2 && this.x < theBall.x + theBall.size/2)
+    if(theBall.timer > 60 && (this.x-10) > theBall.x - (theBall.size/2) && (this.x-10) < theBall.x + (theBall.size/2))
     {
-      if(this.y > theBall.y - theBall.size/2 && this.y < theBall.x + theBall.size/2)
+      if((this.y-10) > theBall.y - (theBall.size/2) && (this.y-10) < theBall.y + (theBall.size/2))
       {
+        theBall.timer = 0;
+
         bullets.splice(this.index, 1);
 
         boomNoise.setVolume(0.55);
         boomNoise.play();
         theBall.controller = this.controller;
         theBall.size += 0.5;
+        theBall.yVel *= -1;
         ballX[ballX.length] = this.x - 10;
         ballY[ballY.length] = this.y - 10;
         ballColor[ballColor.length] = this.controller;  
         ballSize[ballSize.length] = 50; 
+
+        if(this.controller == 1)
+        {
+          particles[particles.length] = new HitParticles(this.x, this.y, 20, 3, 1, false, true);
+        }
+
+        if(this.controller == 2)
+        {
+          particles[particles.length] = new HitParticles(this.x, this.y, 20, 3, 2, false, true);
+        }
+
       }
     }   
   }
